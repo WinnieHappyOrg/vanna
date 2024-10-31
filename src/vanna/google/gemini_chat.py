@@ -7,30 +7,33 @@ class GoogleGeminiChat(VannaBase):
         VannaBase.__init__(self, config=config)
 
         # default temperature - can be overrided using config
-        self.temperature = 0.7
+        self.temperature = 1.0
 
         if "temperature" in config:
             self.temperature = config["temperature"]
 
-        if "model_name" in config:
-            model_name = config["model_name"]
+        if "LLM_model_name" in config:
+            model_name = config["LLM_model_name"]
         else:
             model_name = "gemini-1.5-pro"
 
         self.google_api_key = None
-
-        if "api_key" in config or os.getenv("GOOGLE_API_KEY"):
+        import vertexai
+        from vertexai.generative_models import GenerativeModel, Part
+        import vertexai.preview.generative_models as generative_models
+        if "GOOGLE_APPLICATION_CREDENTIALS" in config or os.environ["GOOGLE_APPLICATION_CREDENTIALS"]:
             """
             If Google api_key is provided through config
             or set as an environment variable, assign it.
             """
-            import google.generativeai as genai
+            vertexai.init(project=config["gcp_project"], location=config["gcp_location"])
 
-            genai.configure(api_key=config["api_key"])
-            self.chat_model = genai.GenerativeModel(model_name)
+            # genai.configure(api_key=config["api_key"])
+            # self.chat_model = genai.GenerativeModel(model_name)
+            self.chat_model = GenerativeModel(model_name)
         else:
             # Authenticate using VertexAI
-            from vertexai.generative_models import GenerativeModel
+            
             self.chat_model = GenerativeModel(model_name)
 
     def system_message(self, message: str) -> any:
